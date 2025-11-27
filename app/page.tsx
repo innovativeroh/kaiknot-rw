@@ -27,6 +27,8 @@ export default function DoorRevealSection() {
   const crawlTextRef = useRef<HTMLDivElement>(null);
   const scrollVideoRef = useRef<HTMLVideoElement>(null);
   const videoOverlayRef = useRef<HTMLDivElement>(null);
+  const spotlightRef = useRef<HTMLDivElement>(null); // Ref for spotlight
+  const textContainerRef = useRef<HTMLDivElement>(null); // Ref for parallax text
 
   // Starfield speed and color control
   const starSpeedRef = useRef(0.5);
@@ -242,6 +244,36 @@ export default function DoorRevealSection() {
       }, 0);
     }
 
+    // --- MOUSE MOVEMENT (Parallax & Spotlight) ---
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!textContainerRef.current || !spotlightRef.current) return;
+
+      const { clientX, clientY } = e;
+      const x = (clientX / window.innerWidth - 0.5) * 2; // -1 to 1
+      const y = (clientY / window.innerHeight - 0.5) * 2; // -1 to 1
+
+      // Parallax Text
+      gsap.to(textContainerRef.current, {
+        x: x * 30, // Move 30px
+        y: y * 30,
+        rotationY: x * 5, // Tilt
+        rotationX: -y * 5,
+        duration: 1,
+        ease: "power2.out"
+      });
+
+      // Spotlight
+      gsap.to(spotlightRef.current, {
+        x: clientX,
+        y: clientY,
+        duration: 0.5,
+        ease: "power2.out"
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+
   }, { scope: containerRef });
 
   return (
@@ -272,8 +304,14 @@ export default function DoorRevealSection() {
           <Starfield speedRef={starSpeedRef} starColorRef={starColorRef} /> {/* Starfield Background with speed and color control */}
 
           {/* --- LAYER 1: CONTENT --- */}
-          <div ref={contentRef} className="relative z-10 flex flex-col items-center justify-center text-center">
-            <div className="relative">
+          <div ref={contentRef} className="relative z-10 flex flex-col items-center justify-center text-center perspective-1000">
+            {/* Spotlight Effect */}
+            <div
+              ref={spotlightRef}
+              className="absolute w-[800px] h-[800px] bg-white/5 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 -translate-y-1/2 mix-blend-overlay z-0"
+            />
+
+            <div className="relative z-10" ref={textContainerRef}>
               <div className="flex flex-col items-center justify-center w-full">
                 {/* TITLE: COMING SOON */}
                 <h1 className="text-7xl md:text-9xl font-black font-display text-white tracking-tighter leading-[1.1] mix-blend-difference z-20 flex flex-col items-center">
